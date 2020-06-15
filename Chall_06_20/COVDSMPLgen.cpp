@@ -14,21 +14,21 @@ int fail(string msg) {
 
 int main() {
 
-	int T = 20;
+	int T = 40;
 	int N = 60;
 	int Q = 5*N*N;
-	int PS[20] = {15, 15, 15, 15, 15, 10, 10, 10, 10, 10, 5, 5, 5, 5, 5, 2, 2, 2, 2, 2};
+	int PS[4] = {15, 10, 5, 2};
 	int SS = 0;
 	
 	cout << T << endl;
-	srand(42469);
+	srand(424269);
 	// srand(time(0));
 	while(T--) {
-		cout << N << " " << PS[T] << endl;
+		cout << N << " " << PS[T/10] << endl;
 		vector<vi> A(N+1, vi(N+1, 0));
 		for(int i = 1; i <= N; ++i)
 			for(int j = 1; j <= N; ++j)
-				if(rand()%100 < PS[T])
+				if(rand()%100 < PS[T/10])
 					A[i][j] = 1;
 		int q = 0, score=0;
 		bool ok = false;
@@ -66,7 +66,7 @@ int main() {
 				if(!ok) return fail("Bad answer");
 				else {
 					cout << 1 << endl;
-					cerr << "[GEN] (P: " << PS[T] << ")  Good answer!!! Score: " << score << " (" << q <<  ") " << endl;
+					cerr << "[GEN] (P: " << PS[T/10] << ")  Good answer!!! Score: " << score << " (" << q <<  ") " << endl;
 					SS += score;
 				}
 			} else return fail("Bad message type");

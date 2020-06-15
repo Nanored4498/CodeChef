@@ -10,12 +10,11 @@ typedef pair<int, int> pii;
 typedef vector<int> vi;
 typedef tuple<int, int, int> t3i;
 
-bool fill_seg(vi& a, int N, int tot, int o1, int o2, bool row) {
+bool fill_seg(vi& a, int N, int tot, bool row) {
 	a.assign(N+1, -1);
 	a[0] = 0;
 	a[N] = tot;
 	int i = 0, j = N;
-	int A = 2*N - (o2-o1+1);
 	while(true) {
 		if(a[i] == a[j] || i+1 >= j) {
 			while(i < j) a[++i] = a[j];
@@ -31,22 +30,22 @@ bool fill_seg(vi& a, int N, int tot, int o1, int o2, bool row) {
 		bool up = false;
 		for(int kk = (i+j)/2; kk <= (i+j+1)/2; ++kk) {
 			double x0 = a[i] + (kk-i) * e;
-			double x1 = a[N] - a[j] + (j-kk) * e;
-			int c0 = (A*(2*N-kk) + x0) / (1. + x0);
-			int c1 = (A*(N+kk) + x1) / (1. + x1);
+			double x1 = a[N] - x0;
+			int c0 = (N*(2*N-kk) + x0) / (1. + x0);
+			int c1 = (N*(N+kk) + x1) / (1. + x1);
 			if(c0 < lc) { k = kk; up = false; lc = c0; }
 			if(c1 < lc) { k = kk; up = true; lc = c1; }
 		}
 		if(up) {
-			if(row) cout << "1 " << k+1 << " " << o1 << " " << N << " " << o2 << endl;
-			else cout << "1 " << o1 << " " << k+1 << " " << o2 << " " << N << endl;
+			if(row) cout << "1 " << k+1 << " 1 " << N << " " << N << endl;
+			else cout << "1 1 " << k+1 << " " << N << " " << N << endl;
 			int x;
 			cin >> x;
 			if(x == -1) return false;
 			a[k] = a[N] - x;
 		} else {
-			if(row) cout << "1 " << 1 << " " << o1 << " " << k << " " << o2 << endl;
-			else cout << "1 " << o1 << " " << 1 << " " << o2 << " " << k << endl;
+			if(row) cout << "1 1 1 " << k << " " << N << endl;
+			else cout << "1 1 1 " << N << " " << k << endl;
 			cin >> a[k];
 			if(a[k] == -1) return false;
 		}
@@ -75,27 +74,27 @@ pair<double, int> q_score(int i, int j, int r1, int c1, const vector<vi> &S, con
 	A = i, B = j;
 	X = subsum(S, 0, 0, i, c1) + subsum(S, 0, c1, r1, j);
 	X += subsum(E, 0, 0, i-r1, j-c1);
-	score = (2*N-A) * (2*N-B) / (1 + X);
+	score = ceil((2*N-A) * (2*N-B) / (1 + X));
 	if(score < ans.first) ans = {score, 0};
 	if(j < N) {
 		A = i; B = N-j;
 		X = subsum(S, 0, c2, i, N) + subsum(S, 0, j, r1, c2);
 		X += subsum(E, 0, j-c1, i-r1, nc);
-		score = (2*N-A) * (2*N-B) / (1 + X);
+		score = ceil((2*N-A) * (2*N-B) / (1 + X));
 		if(score < ans.first) ans = {score, 1};
 	}
 	if(i < N) {
 		A = N-i; B = j;
 		X = subsum(S, i, 0, N, c1) + subsum(S, r2, c1, N, j);
 		X += subsum(E, i-r1, 0, nr, j-c1);
-		score = (2*N-A) * (2*N-B) / (1 + X);
+		score = ceil((2*N-A) * (2*N-B) / (1 + X));
 		if(score < ans.first) ans = {score, 2};
 	}
 	if(j < N && i < N) {
 		A = N-i; B = N-j;
 		X = subsum(S, i, c2, N, N) + subsum(S, r2, j, N, c2);
 		X += subsum(E, i-r1, j-c1, nr, nc);
-		score = (2*N-A) * (2*N-B) / (1 + X);
+		score = ceil((2*N-A) * (2*N-B) / (1 + X));
 		if(score < ans.first) ans = {score, 3};
 	}
 
@@ -135,7 +134,7 @@ bool q_send(int i, int j, int t, vector<vi> &S) {
 
 bool f(int r1, int c1, int r2, int c2, vector<vi> &S, vector<vi> &A) {
 	// cerr << "f call: " << r1 << " " << c1 << " " << r2 << " " << c2 << endl;
-	int nor=0, noc=0;
+	int nor=0, noc=0, N=S.size()-1;
 	vi row_o(r2-r1+1, 0), row_z(r2-r1+1, 0), col_o(c2-c1+1, 0), col_z(c2-c1+1, 0);
 	for(int i = r1+1; i <= r2; ++i)
 		for(int j = c1+1; j <= c2; ++j)
@@ -239,30 +238,29 @@ bool f(int r1, int c1, int r2, int c2, vector<vi> &S, vector<vi> &A) {
 	}
 
 	// Find center
-	ii = 0; jj = 0;
-	double hshr = getH(is.front());
-	double hshc = getH(js.front());
-	double coeff = (rs.size() > 50 || cs.size() > 50) ? .33 : .5;
-	while(hshr+getH(is[ii+1]) <= coeff*shr) hshr += getH(is[++ii]);
-	while(hshc+getH(js[jj+1]) <= coeff*shc) hshc += getH(js[++jj]);
-	int bi = get<0>(is[ii]), bj = get<0>(js[jj]);
-	pair<double, int> best_c = q_score(bi, bj, r1, c1, S, E);
-	for(int i = get<0>(is[ii]); i < get<0>(is[ii+1]); ++i)
-		for(int j = get<0>(js[jj]); j < get<0>(js[jj+1]); ++j) {
+	double rat_min = .3;
+	int bi=-1, bj=-1;
+	ii = 0;
+	pair<double, int> best_c = {1e12, 0};
+	double hshr = 0;
+	for(int i = r1+1; i < r2; ++i) {
+		if(ii < is.size() && get<0>(is[ii]) == i) hshr += getH(is[ii++]);
+		if(ii+1 < is.size() && hshr+getH(is[ii+1]) <= rat_min*shr) continue;
+		if(ii > 1 && hshr-getH(is[ii-1]) >= (1-rat_min)*shr) break;
+		jj = 0;
+		double hshc = 0;
+		for(int j = c1+1; j < c2; ++j) {
+			if(jj < js.size() && get<0>(js[jj]) == j) hshc += getH(js[jj++]);
+			if(jj+1 < js.size() && hshc+getH(js[jj+1]) <= rat_min*shc) continue;
+			if(jj > 0 && hshc-getH(js[jj-1]) >= (1-rat_min)*shc) break;
 			pair<double, int> tmp_c = q_score(i, j, r1, c1, S, E);
+			tmp_c.first *= (r2-r1-1) + (c2-c1-1);
+			tmp_c.first += q_score(r1+1, j, r1, c1, S, E).first * (i-r1-.5) + q_score(r2-1, j, r1, c1, S, E).first * (r2-i-.5);
+			tmp_c.first += q_score(i, c1+1, r1, c1, S, E).first * (j-c1-.5) + q_score(i, c2-1, r1, c1, S, E).first * (c2-j-.5);
+			tmp_c.first *= max(hshr, shr-hshr) + max(hshc, shc-hshc);
 			if(tmp_c.first < best_c.first) { best_c = tmp_c; bi = i; bj = j; }
 		}
-	ii = is.size()-1;
-	jj = js.size()-1;
-	hshr = shr - getH(is.back());
-	hshc = shc - getH(js.back());
-	while(hshr-getH(is[ii-1]) >= (1-coeff)*shr) hshr -= getH(is[--ii]);
-	while(hshc-getH(js[jj-1]) >= (1-coeff)*shc) hshc -= getH(js[--jj]);
-	for(int i = get<0>(is[ii-1]); i < get<0>(is[ii]); ++i)
-		for(int j = get<0>(js[jj-1]); j < get<0>(js[jj]); ++j) {
-			pair<double, int> tmp_c = q_score(i, j, r1, c1, S, E);
-			if(tmp_c.first < best_c.first) { best_c = tmp_c; bi = i; bj = j; }
-		}
+	}
 	if(!q_send(bi, bj, best_c.second, S)) return false;
 
 	// Create U, D, L and R
@@ -560,8 +558,8 @@ int main() {
 		if(tot == -1) return 0;
 
 		vi rs, cs;
-		if(!fill_seg(rs, N, tot, 1, N, true)) return 0;
-		if(!fill_seg(cs, N, tot, 1, N, false)) return 0;
+		if(!fill_seg(rs, N, tot, true)) return 0;
+		if(!fill_seg(cs, N, tot, false)) return 0;
 
 		// Count zeros
 		int zr = 0, zc = 0;
