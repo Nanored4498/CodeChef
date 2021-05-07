@@ -561,13 +561,6 @@ int main() {
 		if(!fill_seg(rs, N, tot, true)) return 0;
 		if(!fill_seg(cs, N, tot, false)) return 0;
 
-		// Count zeros
-		int zr = 0, zc = 0;
-		for(int i = 1; i <= N; ++i) {
-			if(rs[i] == rs[i-1]) ++zr;
-			if(cs[i] == rs[i-1]) ++zc;
-		}
-
 		// construct A
 		vector<vi> S(N+1, vi(N+1, -1)), A(N+1, vi(N+1, -1));
 		for(int i = 0; i <= N; ++i) {
